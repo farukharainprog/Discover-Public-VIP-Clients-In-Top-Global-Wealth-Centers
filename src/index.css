@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #070709;
+    color: #f3f4f6;
+  }
+
+  .font-brand {
+    font-family: 'Cinzel', serif;
+  }
+
+  .font-mono-code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom Gold & Dark VIP styling */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFF6D1 0%, #E5B25D 40%, #D49E35 60%, #F5D38A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #d49e35 0%, #b8860b 50%, #8c6203 100%);
+}
+
+.gold-border {
+  border-color: rgba(212, 158, 53, 0.35);
+}
+
+.gold-border-glow:hover {
+  border-color: rgba(229, 178, 93, 0.7);
+  box-shadow: 0 0 25px -5px rgba(212, 158, 53, 0.25);
+}
+
+.gold-glow {
+  box-shadow: 0 0 35px -5px rgba(212, 158, 53, 0.2);
+}
+
+.gold-subtle-glow {
+  box-shadow: 0 0 15px -3px rgba(212, 158, 53, 0.15);
+}
+
+.dark-glass {
+  background: rgba(14, 14, 18, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 158, 53, 0.18);
+}
+
+.dark-card {
+  background: #0f1015;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Custom luxury scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090a0d;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a251b;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d49e35;
+}

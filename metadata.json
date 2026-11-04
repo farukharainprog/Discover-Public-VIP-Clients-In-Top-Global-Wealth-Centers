@@ -1,0 +1,8 @@
+{
+  "name": "GLOBAL VIP CLIENT FINDER",
+  "description": "Discover high-value international business clients, verified contacts, and VIP leads across top tier economies with AI outreach by Farukh Businessman Wala.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

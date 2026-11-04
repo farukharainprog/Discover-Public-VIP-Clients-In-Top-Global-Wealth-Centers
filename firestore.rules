@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Permanent Super Owner Check (Strictly Protected)
+    function isSuperOwner() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'farukharain962@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidLead(data) {
+      return data.keys().hasAll(['userId', 'businessName', 'country', 'industry', 'status', 'createdAt'])
+        && data.userId is string && data.userId.size() <= 128
+        && data.businessName is string && data.businessName.size() <= 200
+        && data.country is string && data.country.size() <= 100
+        && data.industry is string && data.industry.size() <= 100
+        && data.status is string && data.status in ['new', 'contacted', 'interested', 'not_interested', 'client']
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && (!('city' in data) || (data.city is string && data.city.size() <= 100))
+        && (!('website' in data) || (data.website is string && data.website.size() <= 300))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 200))
+        && (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 50))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 50))
+        && (!('facebook' in data) || (data.facebook is string && data.facebook.size() <= 300))
+        && (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 300))
+        && (!('linkedin' in data) || (data.linkedin is string && data.linkedin.size() <= 300))
+        && (!('description' in data) || (data.description is string && data.description.size() <= 2000))
+        && (!('source' in data) || (data.source is string && data.source.size() <= 300))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000))
+        && (!('isVerified' in data) || (data.isVerified is bool))
+        && (!('companySize' in data) || (data.companySize is string && data.companySize.size() <= 50))
+        && (!('verificationDetails' in data) || (data.verificationDetails is string && data.verificationDetails.size() <= 500))
+        && (!('lastVerifiedDate' in data) || (data.lastVerifiedDate is string && data.lastVerifiedDate.size() <= 50))
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isValidPrivateLead(data) {
+      return data.keys().hasAll(['ownerEmail', 'businessOrCreatorName', 'country', 'status', 'createdAt'])
+        && data.ownerEmail is string && data.ownerEmail.size() <= 200
+        && data.businessOrCreatorName is string && data.businessOrCreatorName.size() <= 200
+        && data.country is string && data.country.size() <= 100
+        && data.status is string && data.status in ['new', 'contacted', 'interested', 'client', 'not_interested']
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && (!('city' in data) || (data.city is string && data.city.size() <= 100))
+        && (!('categoryType' in data) || (data.categoryType is string && data.categoryType.size() <= 50))
+        && (!('subCategory' in data) || (data.subCategory is string && data.subCategory.size() <= 100))
+        && (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 50))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 50))
+        && (!('website' in data) || (data.website is string && data.website.size() <= 300))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 200))
+        && (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 300))
+        && (!('youtube' in data) || (data.youtube is string && data.youtube.size() <= 300))
+        && (!('tiktok' in data) || (data.tiktok is string && data.tiktok.size() <= 300))
+        && (!('facebook' in data) || (data.facebook is string && data.facebook.size() <= 300))
+        && (!('description' in data) || (data.description is string && data.description.size() <= 2000))
+        && (!('source' in data) || (data.source is string && data.source.size() <= 300))
+        && (!('verificationStatus' in data) || (data.verificationStatus is string && data.verificationStatus.size() <= 100))
+        && (!('verificationDetails' in data) || (data.verificationDetails is string && data.verificationDetails.size() <= 500))
+        && (!('lastVerifiedDate' in data) || (data.lastVerifiedDate is string && data.lastVerifiedDate.size() <= 50))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000))
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Standard Leads collection
+    match /leads/{leadId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isSuperOwner());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isSuperOwner());
+      allow create: if isSignedIn() && isValidLead(incoming()) && (incoming().userId == request.auth.uid || isSuperOwner());
+      allow update: if isSignedIn() && isValidLead(incoming()) && incoming().userId == existing().userId && (resource.data.userId == request.auth.uid || isSuperOwner());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isSuperOwner());
+    }
+
+    // Owner-Only Private WhatsApp Leads collection
+    match /private_whatsapp_leads/{leadId} {
+      allow get, list: if isSuperOwner();
+      allow create: if isSuperOwner() && isValidPrivateLead(incoming());
+      allow update: if isSuperOwner() && isValidPrivateLead(incoming());
+      allow delete: if isSuperOwner();
+    }
+
+    // Authorized Gmails Access List (Super Owner Managed)
+    match /authorized_users/{userDocId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSuperOwner();
+    }
+
+    // Search History Logs
+    match /search_history/{historyId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isSuperOwner());
+      allow list: if isSuperOwner();
+      allow create: if isSignedIn() && request.auth.uid == userId && (incoming().role == 'member' || incoming().role == 'vip' || isSuperOwner());
+      allow update: if isSignedIn() && (isSuperOwner() || (request.auth.uid == userId && incoming().role == existing().role));
+      allow delete: if isSuperOwner();
+    }
+
+    // Config collection
+    match /config/{configId} {
+      allow get, list: if isSignedIn();
+      allow write: if isSuperOwner();
+    }
+
+    // Admins marker collection
+    match /admins/{adminId} {
+      allow get, list, write: if isSuperOwner();
+    }
+  }
+}
